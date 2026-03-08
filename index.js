@@ -16,6 +16,7 @@ async function rebuild(config) {
     try {
         await stopServer();
         await buildProject(config.build);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
         startServer(config.exec);
     } catch (err) {
         console.error("[hotreload] rebuild failed");
@@ -23,7 +24,7 @@ async function rebuild(config) {
     building = false;
     if (pendingChange) {
         pendingChange = false;
-        rebuild(config);
+        setTimeout(() => rebuild(config), 100);
     }
 }
     async function main() {
