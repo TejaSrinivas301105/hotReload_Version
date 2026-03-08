@@ -17,7 +17,12 @@ export function fileWatcher(root, onChange){
             /\.tmp$/
         ],
         persistent: true,
-        ignoreInitial: true
+        ignoreInitial: true,
+        usePolling: false,
+        awaitWriteFinish: {
+            stabilityThreshold: 200,
+            pollInterval: 100
+        }
     });
 
     const debouncedChange = debounce((path) => {
@@ -30,7 +35,15 @@ export function fileWatcher(root, onChange){
     watch.on("unlink", debouncedChange);
     watch.on("addDir", debouncedChange);
     
-    watch.on("error", error => console.error("[hotreload] Watcher error:", error));
+    watch.on("error", (error) => {
+        if (error.code === 'ENOSPC') {
+            console.error("[hotreload] ERROR: File watch limit reached!");
+            console.error("[hotreload] Increase system limit or use --usePolling flag");
+            console.error("[hotreload] Linux: sudo sysctl fs.inotify.max_user_watches=524288");
+        } else {
+            console.error("[hotreload] Watcher error:", error);
+        }
+    });
     
     console.log("[hotreload] Watching:", root);
 }
